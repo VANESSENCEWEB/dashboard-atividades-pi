@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ISAC Conecta — Painel</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23121722'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-family='ui-monospace,monospace' font-size='11' fill='%238eb4ff'%3EIC%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=11">
+</head>
+<body>
+  <a class="skip" href="#conteudo">Ir para o conteúdo</a>
+  <div class="app">
+    <aside class="side">
+      <div class="side-head">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">IC</div>
+          <div>
+            <h1>ISAC Conecta</h1>
+            <p id="hoje-label">Reta final</p>
+          </div>
+        </div>
+        <nav aria-label="Seções">
+          <button type="button" data-view="hoje"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Painel</span></button>
+          <button type="button" data-view="frentes"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-3 2.8-4.5 5.5-4.5S14.4 16 15 19"/><circle cx="17" cy="9" r="2.2"/><path d="M16 14.5c2.2.2 3.8 1.4 4.5 3.5"/></svg><span>Frentes</span></button>
+          <button type="button" data-view="calendario"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/></svg><span>Calendário</span></button>
+          <button type="button" data-view="arquitetura"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5A2 2 0 0 1 5 5.5h4l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-10z"/></svg><span>Arquitetura</span></button>
+          <button type="button" data-view="escopo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Escopo</span></button>
+          <button type="button" data-view="desafio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v3a6 6 0 0 1-12 0V4z"/><path d="M6 6H4.5A2.5 2.5 0 0 0 7 10M18 6h1.5A2.5 2.5 0 0 1 17 10"/><path d="M12 13v3M9 20h6M10 16h4"/></svg><span>Desafio</span></button>
+          <button type="button" data-view="combinados"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7H5.5A2.5 2.5 0 0 0 3 9.5v9A2.5 2.5 0 0 0 5.5 21H15"/><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M12 9.5h5M14.5 7v5"/></svg><span>Combinados</span></button>
+        </nav>
+      </div>
+      <div id="painel"></div>
+    </aside>
+    <main class="main">
+      <header class="top">
+        <div class="top-copy">
+          <p class="kicker" id="kicker"></p>
+          <h2 id="titulo"></h2>
+          <p class="lede" id="resumo"></p>
+        </div>
+        <div id="filtros"></div>
+      </header>
+      <div id="conteudo"></div>
+    </main>
+  </div>
+  <script src="data/plano.js?v=11"></script>
+  <script src="js/app.js?v=12"></script>
+</body>
+</html>
