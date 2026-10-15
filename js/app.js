@@ -177,9 +177,33 @@ function icon(tipo) {
     design: '<path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>',
     alerta: '<path d="M12 3.2 2.8 20h18.4L12 3.2zm0 6.2a.9.9 0 0 1 .9.9v4.2a.9.9 0 0 1-1.8 0v-4.2a.9.9 0 0 1 .9-.9zM12 17.2a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z"/>',
   };
+  // Ícones de traço (linha), usados nos títulos e nos blocos novos
+  const linhas = {
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/>',
+    pessoas: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-3 2.8-4.5 5.5-4.5S14.4 16 15 19"/><circle cx="17" cy="9" r="2.2"/><path d="M16 14.5c2.2.2 3.8 1.4 4.5 3.5"/>',
+    chave: '<path d="M14.5 6.5a3.5 3.5 0 1 1-1 5L6 19H4v-2l7.5-7.5"/><path d="M8 17l1.5 1.5"/>',
+    lampada: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+    relogio: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    caminho: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6.5"/>',
+    pasta: '<path d="M3 7.5A2 2 0 0 1 5 5.5h4l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-10z"/>',
+    etapas: '<path d="M4 6h16M4 12h10M4 18h6"/>',
+    alvo: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    reuniao: '<path d="M4 6h16v10H8l-4 4V6z"/><path d="M8 10h8M8 13h5"/>',
+    sino: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+    trofeu: '<path d="M6 4h12v3a6 6 0 0 1-12 0V4z"/><path d="M6 6H4.5A2.5 2.5 0 0 0 7 10M18 6h1.5A2.5 2.5 0 0 1 17 10"/><path d="M12 13v3M9 20h6M10 16h4"/>',
+    escudo: '<path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
+    dinheiro: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
+  };
+  if (linhas[tipo]) return `<span class="glyph glyph-${tipo}"><svg class="traco" viewBox="0 0 24 24" aria-hidden="true">${linhas[tipo]}</svg></span>`;
   return `<span class="glyph glyph-${tipo}"><svg viewBox="0 0 24 24" aria-hidden="true">${paths[tipo] || pasta}</svg></span>`;
 }
 
+// Título de seção com ícone, para dar hierarquia visual a cada bloco
+function tituloSecao(tipo, texto) {
+  return `<h3 class="titulo-icone">${icon(tipo)}<span>${esc(texto)}</span></h3>`;
+}
+
+// Pílula de status no estilo Monday: bloco de cor cheia, fácil de ler de longe
 function pill(status) {
   return `<span class="pill ${status}">${rotulo(status)}</span>`;
 }
@@ -362,8 +386,8 @@ function arvore() {
     {
       tipo: "design",
       nome: "Figma",
-      dono: ["matheus"],
-      nota: "Plano do grupo e telas do app.",
+      dono: ["matheus", "vanessa"],
+      nota: "Plano do grupo e telas do app. As primeiras telas foram feitas por Vanessa e Matheus.",
       links: [
         { href: PLANO.links.figmaPlano, rotulo: "Figma do plano" },
         { href: PLANO.links.figmaTelas, rotulo: "Figma das telas" },
@@ -447,8 +471,57 @@ function avisos() {
   return lista.filter((item) => item.nivel === "critico" || item.pessoas.includes("todos") || item.pessoas.includes(state.pessoa));
 }
 
+// Recado da coordenação, no topo do painel
+function avisoInicialHTML() {
+  const aviso = PLANO.aviso;
+  if (!aviso) return "";
+  return `
+    <section class="recado" aria-label="Recado da coordenação">
+      ${icon("info")}
+      <div>
+        <h3>${esc(aviso.titulo)}</h3>
+        ${aviso.paragrafos.map((texto) => `<p>${esc(texto)}</p>`).join("")}
+        <p class="assinatura">— Vanessa</p>
+      </div>
+    </section>`;
+}
+
+// Destaque vermelho: o que trava o projeto, quem resolve e como
+function bloqueioHTML() {
+  const passos = PLANO.bloqueioComo || [];
+  const ate = PLANO.bloqueioAte ? parseISO(PLANO.bloqueioAte) : null;
+  return `
+    <section class="bloqueio" aria-label="Bloqueio principal">
+      <div class="bloqueio-topo">
+        <span class="sirene" aria-hidden="true"></span>
+        <div>
+          <p class="kicker">Bloqueio principal</p>
+          <h3>O Publicar não funciona</h3>
+        </div>
+        ${ate ? `<div class="bloqueio-prazo"><b>${esc(quando(ate))}</b><span>${esc(fmt(ate, "short"))}</span></div>` : ""}
+      </div>
+      <p class="bloqueio-texto">${esc(PLANO.bloqueio)}</p>
+      <div class="bloqueio-grade">
+        <div>
+          <p class="rotulo">${icon("pessoas")}Quem resolve</p>
+          <div class="badges">${badges(PLANO.bloqueioQuem)}</div>
+        </div>
+        <div>
+          <p class="rotulo">${icon("chave")}Como resolver</p>
+          <ol class="bloqueio-passos">${passos.map((passo) => `
+            <li class="${foco(passo.pessoa)}">
+              ${badge(passo.pessoa)}
+              <span>${esc(passo.texto)}</span>
+              <time>até ${esc(fmt(parseISO(passo.ate), "short"))}</time>
+            </li>`).join("")}</ol>
+        </div>
+      </div>
+    </section>`;
+}
+
 function avisosHTML() {
-  const lista = avisos();
+  // o crítico já aparece no bloco vermelho grande; aqui ficam só os de atenção
+  const lista = avisos().filter((item) => item.nivel !== "critico");
   if (!lista.length) return `<p class="vazio">Nenhum aviso para este filtro.</p>`;
   return `<div class="aviso-grid">${lista.map((item) => `
     <article class="aviso ${item.nivel}">
@@ -477,13 +550,14 @@ function fasesHTML(comTexto) {
   }).join("")}</div>`;
 }
 
-function linha({ tempo, titulo, detalhe, pessoas, status, tag }) {
+function linha({ tempo, titulo, detalhe, pessoas, status, tag, porque }) {
   return `
     <div class="row">
       <time>${tempo ? esc(tempo) : ""}</time>
       <div>
         <strong>${esc(titulo)}${tag ? `<span class="tag">${esc(tag)}</span>` : ""}</strong>
         ${detalhe ? `<p>${esc(detalhe)}</p>` : ""}
+        ${porque ? `<p class="porque"><b>Por quê:</b> ${esc(porque)}</p>` : ""}
         ${pessoas ? `<div class="badges">${badges(pessoas)}</div>` : ""}
       </div>
       ${status ? pill(status) : ""}
@@ -496,7 +570,7 @@ function kpisHTML() {
   const entrega = alvoEntrega();
   const dias = entrega ? Math.max(0, daysBetween(today(), parseISO(entrega.data))) : 0;
   return `<div class="kpis">
-    <article class="kpi"><span>Entregas do grupo</span><b>${grupo.pct}%</b><small>${grupo.prontos} prontas · ${grupo.parciais} ${grupo.parciais === 1 ? "parcial" : "parciais"} · ${grupo.abertos} em aberto</small></article>
+    <article class="kpi"><span>Entregas do grupo</span><b>${grupo.pct}%</b><small>${grupo.prontos} ${grupo.prontos === 1 ? "pronta" : "prontas"} · ${grupo.parciais} ${grupo.parciais === 1 ? "parcial" : "parciais"} · ${grupo.abertos} em aberto</small></article>
     <article class="kpi"><span>Desafio</span><b>${desafio.prontos} + ${desafio.parciais}</b><small>${desafio.prontos === 1 ? "pronta" : "prontas"} e parciais · ${desafio.abertos} em aberto</small></article>
     <article class="kpi"><span>Em aberto no grupo</span><b>${grupo.abertos}</b><small>de ${grupo.total} entregas da reta final</small></article>
     <article class="kpi"><span>Até a próxima entrega</span><b>${dias}</b><small>${dias === 1 ? "dia" : "dias"} no calendário, fora as horas do relógio</small></article>
@@ -548,7 +622,7 @@ function renderSidebar() {
     <div class="meter">
       <div class="meter-top"><span>Entregas</span><b>${grupo.pct}%</b></div>
       <div class="bar" aria-hidden="true"><i style="width:${grupo.pct}%"></i></div>
-      <p>${grupo.prontos} prontas · ${grupo.parciais} ${grupo.parciais === 1 ? "parcial" : "parciais"} · ${grupo.abertos} em aberto</p>
+      <p>${grupo.prontos} ${grupo.prontos === 1 ? "pronta" : "prontas"} · ${grupo.parciais} ${grupo.parciais === 1 ? "parcial" : "parciais"} · ${grupo.abertos} em aberto</p>
     </div>
     <div class="meter">
       <div class="meter-top"><span>Desafio</span><b>${desafio.pct}%</b></div>
@@ -637,6 +711,8 @@ function renderHoje() {
   const micros = PLANO.micros.filter((grupo) => state.pessoa === "todos" || grupo.pessoas.includes(state.pessoa));
   $("#conteudo").innerHTML = `
     <div class="stack">
+      ${avisoInicialHTML()}
+      ${bloqueioHTML()}
       <section class="hero" aria-label="Contagem até a próxima etapa e a próxima entrega">
         <div class="hero-col">
           <p class="kicker">Próxima etapa</p>
@@ -665,29 +741,29 @@ function renderHoje() {
         </span>
       </button>
       <section class="secao">
-        <h3>Avisos</h3>
+        ${tituloSecao("sino", "Também precisa de atenção")}
         ${avisosHTML()}
       </section>
       <section class="secao">
-        <div class="secao-head"><h3>Como o anúncio atravessa o projeto</h3><button type="button" class="text-btn" data-view="arquitetura">Abrir a arquitetura</button></div>
+        <div class="secao-head">${tituloSecao("caminho", "Como o anúncio atravessa o projeto")}<button type="button" class="text-btn" data-view="arquitetura">Abrir a arquitetura</button></div>
         ${fluxoHTML()}
       </section>
       <section class="split">
         <div class="secao">
-          <h3>Pastas</h3>
+          ${tituloSecao("pasta", "Pastas")}
           ${arvoreHTML()}
         </div>
         <div class="secao">
-          <h3>${pessoaAtiva() ? `Fila de ${pessoaAtiva().nome}` : "Quem entrega"}</h3>
+          ${tituloSecao("pessoas", pessoaAtiva() ? `Fila de ${pessoaAtiva().nome}` : "Quem entrega")}
           ${fila.length ? `<div class="lista">${fila.slice(0, 6).map(linha).join("")}</div>` : `<p class="vazio">Nada neste filtro.</p>`}
         </div>
       </section>
       <section class="secao">
-        <h3>Etapas</h3>
+        ${tituloSecao("etapas", "Etapas")}
         ${fasesHTML(false)}
       </section>
       <section class="secao">
-        <h3>Micro-reuniões</h3>
+        ${tituloSecao("reuniao", "Micro-reuniões")}
         <div class="micros">${micros.map((grupo) => {
           const proxima = grupo.quando.map(parseISO).filter((data) => data >= today()).sort((a, b) => a - b)[0];
           return `<article class="micro ${foco(grupo.pessoas)}">
@@ -715,6 +791,7 @@ function renderFrentes() {
             ${badge(item.id)}
             <h3>${esc(item.frente)}</h3>
             <p class="frente">${esc(item.entrega)}</p>
+            ${item.porque ? `<p class="porque-frente">${icon("lampada")}<span><b>Por que esta frente existe:</b> ${esc(item.porque)}</span></p>` : ""}
             <p class="passa">Recebe de ${esc(item.recebe)}. Passa para: ${esc(item.passa)}.</p>
           </div>
           <div class="who-stat"><b>${conta.abertos}</b><span>em aberto</span></div>
@@ -741,7 +818,7 @@ function renderCalendario() {
     <div class="stack">
       <section class="secao">${fasesHTML(true)}</section>
       <section class="secao">
-        <h3>Cobranças</h3>
+        ${tituloSecao("relogio", "Cobranças")}
         <div class="lista">${itens.map((item) => linha({
           tempo: fmt(parseISO(item.data), "short"),
           titulo: item.titulo,
@@ -752,7 +829,7 @@ function renderCalendario() {
         })).join("")}</div>
       </section>
       <section class="secao">
-        <h3>Três rodadas de teste</h3>
+        ${tituloSecao("escudo", "Três rodadas de teste")}
         <div class="lista">${PLANO.rodadas.map((rodada) => linha({
           tempo: fmt(parseISO(rodada.data), "short"),
           titulo: rodada.titulo,
@@ -800,7 +877,7 @@ function renderEscopo() {
             </button>`).join("")}
         </div>
       </section>
-      <p class="nota">A apresentação é de hoje, 15 de outubro. As telas são as que já estão prontas no Figma. Ainda faltam desenhar moderação, os admins, Meus anúncios, área do comércio, card premium, painel de impacto e termos. Para a reta final, vale o Painel e o Desafio.</p>
+      <p class="nota">A apresentação é de hoje, 15 de outubro. As telas prontas no Figma foram feitas por Vanessa e Matheus. Ainda faltam desenhar moderação, os admins, Meus anúncios, área do comércio, card premium, painel de impacto e termos. Para a reta final, vale o Painel e o Desafio.</p>
     </div>`;
   const faixa = document.querySelector(".thumbs");
   const ativo = document.querySelector(".thumb.ativo");
@@ -811,11 +888,11 @@ function renderArquitetura() {
   $("#conteudo").innerHTML = `
     <div class="stack">
       <section class="secao">
-        <h3>Caminho de um anúncio</h3>
+        ${tituloSecao("caminho", "Caminho de um anúncio")}
         ${fluxoHTML()}
       </section>
       <section class="secao">
-        <h3>Onde cada parte mora</h3>
+        ${tituloSecao("pasta", "Onde cada parte mora")}
         ${arvoreHTML()}
       </section>
       <section class="grid-2">
@@ -837,6 +914,7 @@ function blocoDesafio(item) {
   return linha({
     titulo: item.titulo,
     detalhe: [item.pedido, item.quemTexto, item.falta || item.fazer].filter(Boolean).join(" "),
+    porque: item.porque,
     pessoas: item.pessoas,
     status,
   });
@@ -850,17 +928,17 @@ function renderDesafio() {
     <div class="stack">
       ${kpisHTML()}
       <section class="secao">
-        <h3>Nove pedidos do desafio</h3>
+        ${tituloSecao("trofeu", "Nove pedidos do desafio")}
         ${itens.length ? `<div class="lista sem-tempo">${itens.join("")}</div>` : `<p class="vazio">Nada neste filtro.</p>`}
       </section>
       <section class="secao">
-        <h3>Pedido do Ronaldo (ISAC)</h3>
+        ${tituloSecao("escudo", "Pedidos do Ronaldo (ISAC)")}
         <p class="lede">Termos, verificação do anúncio, selo de quem publica e retorno quando recusa.</p>
         ${ronaldo.length ? `<div class="lista sem-tempo" style="margin-top:12px">${ronaldo.join("")}</div>` : `<p class="vazio">Nada neste filtro.</p>`}
       </section>
-      ${duplicado ? `<section class="secao"><h3>Duplicidade</h3><div class="lista sem-tempo">${duplicado}</div></section>` : ""}
+      ${duplicado ? `<section class="secao">${tituloSecao("alvo", "Duplicidade")}<div class="lista sem-tempo">${duplicado}</div></section>` : ""}
       <section class="secao">
-        <h3>Modelo de negócio</h3>
+        ${tituloSecao("dinheiro", "Modelo de negócio")}
         <p class="lede">Diferencial oficial do desafio: um Business Model Canvas com a viabilidade técnica, operacional e financeira. ${esc(PLANO.meta.metaOrigem)} ${esc(PLANO.mudas)}</p>
         <div class="grid-3" style="margin-top:12px">
           ${PLANO.bmc.map((item) => `<article class="card"><h3>${esc(item.bloco)}</h3><p>${esc(item.texto)}</p></article>`).join("")}
@@ -874,11 +952,11 @@ function renderCombinados() {
   $("#conteudo").innerHTML = `
     <div class="stack">
       <section class="secao">
-        <h3>Contrato</h3>
+        ${tituloSecao("chave", "Contrato")}
         <ol class="contrato">${PLANO.contrato.map((passo) => `<li>${esc(passo)}</li>`).join("")}</ol>
       </section>
       <section class="secao">
-        <h3>Quem testa a entrega de quem</h3>
+        ${tituloSecao("escudo", "Quem testa a entrega de quem")}
         <div class="lista sem-tempo">${testes.map((teste) => linha({
           titulo: `${pessoa(teste.quem).nome} testa ${teste.testa === "todos" ? "o conjunto" : pessoa(teste.testa).nome}`,
           detalhe: teste.oque,
@@ -891,7 +969,7 @@ function renderCombinados() {
         ${PLANO.regras.map((regra) => `<article class="card"><h3>${esc(regra.titulo)}</h3><p>${esc(regra.texto)}</p></article>`).join("")}
       </section>
       <section class="secao">
-        <h3>Repositórios</h3>
+        ${tituloSecao("pasta", "Repositórios")}
         ${arvoreHTML()}
       </section>
       ${ajudaHTML()}
