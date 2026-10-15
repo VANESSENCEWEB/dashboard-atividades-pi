@@ -1033,3 +1033,40 @@ h2::after { width: 56px; height: 4px; background: linear-gradient(90deg, var(--a
   .pessoa-row { grid-template-columns: 8px auto auto; white-space: nowrap; }
   .pessoa-row .nome { overflow: visible; }
 }
+
+/* ===== Aba Reuniões e testes ===== */
+.levar { margin-top: 6px; color: var(--text); font-size: 15px; }
+.micro-full { display: flex; flex-direction: column; gap: 10px; }
+.micro-full h3 { margin: 0; font-size: 18px; }
+.micro-full p { margin: 0; }
+.datas { display: flex; flex-wrap: wrap; gap: 6px; }
+.data-chip { font-family: var(--mono); font-size: 12px; padding: 3px 9px; border-radius: 6px; background: #1e1e27; color: var(--body); border: 1px solid var(--line-strong); }
+.data-chip.passou { opacity: 0.5; text-decoration: line-through; }
+.data-chip.agora { background: var(--accent); color: #fff; border-color: var(--accent); }
+.rotulo-mini { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.leva { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.leva li { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--body); padding: 8px 10px; border-radius: 8px; background: var(--surface-2); }
+.leva li .badge { align-self: flex-start; }
+.leva li.dim { opacity: 0.4; }
+.relator { display: flex; align-items: center; gap: 8px; margin-top: auto !important; padding-top: 6px; color: var(--muted); font-size: 13px; }
+.relator .glyph { width: 24px; height: 24px; border-radius: 7px; }
+.relator .glyph svg { width: 13px; height: 13px; }
+.relator b { color: var(--text); }
+.teste-row { grid-template-columns: minmax(0, 1fr) auto !important; align-items: center; }
+.par { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.seta-par .glyph { --c: #00d2d3; width: 26px; height: 26px; border-radius: 50%; }
+.seta-par .glyph svg { width: 14px; height: 14px; }
+.teste-row:hover .seta-par .glyph { transform: translateX(3px); }
+.rodadas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.rodada { position: relative; padding: 16px 16px 16px 60px; }
+.rodada-num { position: absolute; left: 16px; top: 16px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #1e1e27; font-weight: 800; color: var(--text); }
+.rodada.proxima .rodada-num, .rodada.agora .rodada-num { background: var(--accent); color: #fff; }
+.rodada.passou .rodada-num { background: var(--st-pronto); color: #fff; }
+.rodada strong { font-size: 16px; }
+.nota { display: flex; gap: 8px; align-items: flex-start; }
+.nota .glyph { --c: var(--st-pronto); width: 24px; height: 24px; border-radius: 7px; flex: none; }
+.nota .glyph svg { width: 14px; height: 14px; }
+@media (max-width: 860px) {
+  .rodadas { grid-template-columns: 1fr; }
+  .teste-row { grid-template-columns: 1fr !important; }
+}

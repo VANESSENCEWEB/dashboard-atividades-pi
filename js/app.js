@@ -196,6 +196,8 @@ function icon(tipo) {
     sino: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
     trofeu: '<path d="M6 4h12v3a6 6 0 0 1-12 0V4z"/><path d="M6 6H4.5A2.5 2.5 0 0 0 7 10M18 6h1.5A2.5 2.5 0 0 1 17 10"/><path d="M12 13v3M9 20h6M10 16h4"/>',
     escudo: '<path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
+    par: '<path d="M4 12h14M13 7l5 5-5 5"/>',
+    check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
     dinheiro: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',
   };
   if (linhas[tipo]) return `<span class="glyph glyph-${tipo}"><svg class="traco" viewBox="0 0 24 24" aria-hidden="true">${linhas[tipo]}</svg></span>`;
@@ -208,8 +210,8 @@ function tituloSecao(tipo, texto) {
 }
 
 // Pílula de status no estilo Monday: bloco de cor cheia, fácil de ler de longe
-function pill(status) {
-  return `<span class="pill ${status}">${rotulo(status)}</span>`;
+function pill(status, texto) {
+  return `<span class="pill ${status}">${esc(texto || rotulo(status))}</span>`;
 }
 
 function entregasDaPessoa(id) {
@@ -554,7 +556,7 @@ function fasesHTML(comTexto) {
   }).join("")}</div>`;
 }
 
-function linha({ tempo, titulo, detalhe, pessoas, status, tag, porque }) {
+function linha({ tempo, titulo, detalhe, pessoas, status, tag, porque, statusTexto }) {
   return `
     <div class="row">
       <time>${tempo ? esc(tempo) : ""}</time>
@@ -564,7 +566,7 @@ function linha({ tempo, titulo, detalhe, pessoas, status, tag, porque }) {
         ${porque ? `<p class="porque"><b>Por quê:</b> ${esc(porque)}</p>` : ""}
         ${pessoas ? `<div class="badges">${badges(pessoas)}</div>` : ""}
       </div>
-      ${status ? pill(status) : ""}
+      ${status ? pill(status, statusTexto) : ""}
     </div>`;
 }
 
@@ -767,7 +769,7 @@ function renderHoje() {
         ${fasesHTML(false)}
       </section>
       <section class="secao">
-        ${tituloSecao("reuniao", "Micro-reuniões")}
+        <div class="secao-head">${tituloSecao("reuniao", "Micro-reuniões")}<button type="button" class="text-btn" data-view="reunioes">Abrir reuniões e testes</button></div>
         <div class="micros">${micros.map((grupo) => {
           const proxima = grupo.quando.map(parseISO).filter((data) => data >= today()).sort((a, b) => a - b)[0];
           return `<article class="micro ${foco(grupo.pessoas)}">
@@ -960,14 +962,8 @@ function renderCombinados() {
         <ol class="contrato">${PLANO.contrato.map((passo) => `<li>${esc(passo)}</li>`).join("")}</ol>
       </section>
       <section class="secao">
-        ${tituloSecao("escudo", "Quem testa a entrega de quem")}
-        <div class="lista sem-tempo">${testes.map((teste) => linha({
-          titulo: `${pessoa(teste.quem).nome} testa ${teste.testa === "todos" ? "o conjunto" : pessoa(teste.testa).nome}`,
-          detalhe: teste.oque,
-          pessoas: teste.testa === "todos" ? [teste.quem] : [teste.quem, teste.testa],
-          status: "pendente",
-        })).join("")}</div>
-        <p class="nota">Pronto significa que funcionou duas vezes seguidas, no celular e no computador, testado por outra pessoa.</p>
+        <div class="secao-head">${tituloSecao("escudo", "Quem testa a entrega de quem")}<button type="button" class="text-btn" data-view="reunioes">Abrir reuniões e testes</button></div>
+        <p class="lede">${testes.length} ${testes.length === 1 ? "dupla" : "duplas"} neste filtro. A lista completa, com as rodadas e as reuniões, está na aba Reuniões e testes.</p>
       </section>
       <section class="grid-2">
         ${PLANO.regras.map((regra) => `<article class="card"><h3>${esc(regra.titulo)}</h3><p>${esc(regra.texto)}</p></article>`).join("")}
@@ -1083,6 +1079,133 @@ function renderTermos() {
   carregarLegal(item);
 }
 
+/* ---------------------------------------------------------------
+   REUNIÕES E TESTES — tudo de encontro e de teste num lugar só
+   --------------------------------------------------------------- */
+
+// Mostra a pessoa em destaque ou apagada, conforme o filtro de pessoa
+function passaPessoa(ids) {
+  return state.pessoa === "todos" || ids.includes("todos") || ids.includes(state.pessoa);
+}
+
+// Estado de uma data: já passou, é hoje ou ainda vem
+function estadoData(iso) {
+  const diff = daysBetween(today(), parseISO(iso));
+  if (diff < 0) return "passou";
+  if (diff === 0) return "agora";
+  return "futura";
+}
+
+// Bloco 1: a próxima reunião com o instrutor, com relógio
+function proximaReuniaoHTML() {
+  const reunioes = PLANO.marcos
+    .filter((m) => m.tipo === "reuniao")
+    .sort((a, b) => a.data.localeCompare(b.data));
+  const proxima = reunioes.find((m) => fimDoDia(m.data) > new Date());
+  if (!proxima) return "";
+  return `
+    <section class="hero" aria-label="Próxima reunião">
+      <div class="hero-col">
+        <p class="kicker">Próxima reunião com o instrutor</p>
+        <h3>${esc(proxima.titulo)}</h3>
+        <p class="meta">${esc(capital(fmt(parseISO(proxima.data))))} · ${proxima.confirmada ? "confirmada" : "a confirmar"} · a hora sai no grupo</p>
+        ${clockHTML(parseISO(proxima.data))}
+      </div>
+      <div class="hero-col">
+        <p class="kicker">O que levar</p>
+        <p class="levar">${esc(proxima.trazer)}</p>
+        <div class="lista sem-tempo" style="margin-top:14px">${reunioes.map((m) => linha({
+          titulo: `${capital(fmt(parseISO(m.data), "short"))} · ${m.titulo}`,
+          detalhe: m.confirmada ? "Com o instrutor." : "Necessária. A data ainda depende do instrutor.",
+          status: estadoData(m.data) === "passou" ? "pendente" : (m.confirmada ? "pronto" : "parcial"),
+          statusTexto: estadoData(m.data) === "passou" ? "Aconteceu" : (m.confirmada ? "Confirmada" : "A confirmar"),
+        })).join("")}</div>
+      </div>
+    </section>`;
+}
+
+// Bloco 2: micro-reuniões por frente, com o que cada pessoa leva
+function microsHTML() {
+  return `<div class="micros">${PLANO.micros.map((grupo) => {
+    const proxima = grupo.quando.find((d) => estadoData(d) !== "passou");
+    return `
+      <article class="micro micro-full ${foco(grupo.pessoas)}">
+        <p class="kicker">${proxima ? esc(quando(parseISO(proxima))) : "Encerrada"}</p>
+        <h3>${esc(grupo.nome)}</h3>
+        <div class="datas">${grupo.quando.map((d) => `<span class="data-chip ${estadoData(d)}">${esc(fmt(parseISO(d), "short"))}</span>`).join("")}</div>
+        <p>${esc(grupo.pauta)}</p>
+        <p class="rotulo-mini">Cada um leva</p>
+        <ul class="leva">${grupo.pessoas.map((id) => `
+          <li class="${foco(id)}">${badge(id)}<span>${esc(grupo.trazer[id] || "")}</span></li>`).join("")}</ul>
+        <p class="relator">${icon("reuniao")}<span>Relato no grupo: <b>${esc(pessoa(grupo.relator).nome)}</b></span></p>
+      </article>`;
+  }).join("")}</div>`;
+}
+
+// Bloco 3: testes em dupla — ninguém testa a própria entrega
+function testesHTML() {
+  const testes = PLANO.testes.filter((t) => passaPessoa([t.quem, t.testa]));
+  if (!testes.length) return `<p class="vazio">Nada neste filtro.</p>`;
+  return `<div class="lista sem-tempo">${testes.map((t) => `
+    <div class="row teste-row">
+      <div>
+        <div class="par">
+          ${badge(t.quem)}
+          <span class="seta-par" aria-label="testa">${icon("par")}</span>
+          ${t.testa === "todos" ? `<span class="badge todos">O conjunto</span>` : badge(t.testa)}
+        </div>
+        <strong>${esc(t.oque)}</strong>
+      </div>
+      ${pill("pendente")}
+    </div>`).join("")}</div>`;
+}
+
+// Bloco 4: as três rodadas de teste do grupo
+function rodadasHTML() {
+  const proximaId = PLANO.rodadas.find((r) => estadoData(r.data) !== "passou");
+  return `<div class="rodadas">${PLANO.rodadas.map((r, i) => {
+    const estado = estadoData(r.data);
+    const classe = estado === "futura" && r === proximaId ? "proxima" : estado;
+    return `
+      <article class="fase rodada ${classe}">
+        <span class="rodada-num">${i + 1}</span>
+        <small>${esc(capital(fmt(parseISO(r.data), "short")))} · ${esc(quando(parseISO(r.data)))}</small>
+        <strong>${esc(r.titulo)}</strong>
+        <p>${esc(r.texto)}</p>
+      </article>`;
+  }).join("")}</div>`;
+}
+
+function renderReunioes() {
+  const regra = (titulo) => PLANO.regras.find((r) => r.titulo === titulo);
+  const rapida = regra("Atualização rápida");
+  const travou = regra("Travou");
+  $("#conteudo").innerHTML = `
+    <div class="stack">
+      ${proximaReuniaoHTML()}
+      <section class="secao">
+        ${tituloSecao("reuniao", "Micro-reuniões por frente")}
+        <p class="porque-frente">${icon("lampada")}<span><b>Por quê:</b> o grupo tem dificuldade de reunir todo mundo ao mesmo tempo. Reuniões pequenas, só com quem depende um do outro, resolvem rápido. Quem relata conta no grupo o que ficou combinado.</span></p>
+        <div style="margin-top:14px">${microsHTML()}</div>
+      </section>
+      <section class="secao">
+        ${tituloSecao("escudo", "Testes em dupla")}
+        <p class="porque-frente">${icon("lampada")}<span><b>Por quê:</b> quem fez a entrega não enxerga o próprio erro. Outra pessoa testando acha o que quebra antes do Ronaldo achar.</span></p>
+        <div style="margin-top:14px">${testesHTML()}</div>
+        <p class="nota">${icon("check")}<span><b>Pronto</b> significa que funcionou duas vezes seguidas, no celular e no computador, testado por outra pessoa.</span></p>
+      </section>
+      <section class="secao">
+        ${tituloSecao("relogio", "Três rodadas de teste do grupo")}
+        ${rodadasHTML()}
+      </section>
+      <section class="grid-2">
+        ${rapida ? `<article class="card"><h3>${esc(rapida.titulo)}</h3><p>${esc(rapida.texto)}</p></article>` : ""}
+        ${travou ? `<article class="card"><h3>${esc(travou.titulo)}</h3><p>${esc(travou.texto)} Para a Vanessa ajudar, avise com um dia de antecedência.</p></article>` : ""}
+      </section>
+      ${ajudaHTML()}
+    </div>`;
+}
+
 const views = {
   hoje: renderHoje,
   frentes: renderFrentes,
@@ -1092,6 +1215,7 @@ const views = {
   desafio: renderDesafio,
   combinados: renderCombinados,
   termos: renderTermos,
+  reunioes: renderReunioes,
 };
 
 function metaDaView() {
@@ -1104,6 +1228,7 @@ function metaDaView() {
     escopo: ["Escopo", "Apresentação de hoje e telas do Figma", "A apresentação foi feita em 15 de outubro. As telas são as que já estão prontas no Figma."],
     desafio: ["Desafio", "O que a banca espera ver", "Nove entregas do PDF de 16 de setembro. O Business Model Canvas é o diferencial oficial."],
     combinados: ["Combinados", "Contrato, testes e onde mora cada parte", "Quem mudar o formato avisa no grupo antes."],
+    reunioes: ["Reuniões e testes", "Quem se reúne, quando, e quem testa quem", "Reunião de quarta com o instrutor, micro-reuniões por frente e testes em dupla. Ninguém testa a própria entrega."],
     termos: ["Termos", "Termos de uso e política de privacidade", `Versão ${PLANO.legal.versao}, de 15 de outubro. Pedido do Ronaldo: quem anuncia responde pelo conteúdo, não o ISAC. Rascunho do MVP: antes de abrir de verdade, o ISAC pede a revisão de um advogado.`],
   };
   return mapa[state.view] || mapa.hoje;
