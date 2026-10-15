@@ -56,7 +56,7 @@ const PLANO = {
     fazer: "João Vitor entrega a comparação e o aviso de golpe. A moderação decide. Sem embeddings e sem limiar mágico.",
   },
   instrutor: [
-    { id: "i1", titulo: "Termos de uso", pedido: "Quem anuncia responde pelo conteúdo, não o ISAC. A pessoa aceita antes de publicar e o sistema guarda a prova.", porque: "Protege o ISAC: quem anuncia responde pelo conteúdo, por exemplo se alguém anunciar algo ilegal.", situacao: "parcial", pessoas: ["vanessa", "luan", "suedson", "kaio", "james"], quemTexto: "Vanessa (textos prontos), Luan e Suedson (caixa de aceite), Kaio (data e versão no banco), James (API recusa quem não aceitou)", falta: "Termos de uso e política de privacidade estão na versão 1.0, de 15 de outubro. Falta colocar em docs/legal, a caixa de aceite e gravar data e versão no perfil." },
+    { id: "i1", titulo: "Termos de uso", pedido: "Quem anuncia responde pelo conteúdo, não o ISAC. A pessoa aceita antes de publicar e o sistema guarda a prova.", porque: "Protege o ISAC: quem anuncia responde pelo conteúdo, por exemplo se alguém anunciar algo ilegal.", situacao: "parcial", pessoas: ["vanessa", "luan", "suedson", "kaio", "james"], quemTexto: "Vanessa (textos prontos), Luan e Suedson (caixa de aceite), Kaio (data e versão no banco), James (API recusa quem não aceitou)", falta: "Texto pronto: Termos de uso e Política de privacidade, versão 1.0, na aba Termos do painel. Falta a caixa de aceite no front (Luan e Suedson), gravar data e versão no perfil (Kaio) e a API recusar quem não aceitou (James)." },
     { id: "i2", titulo: "Verificar o anúncio", pedido: "Todo anúncio novo passa pela equipe do ISAC antes da vitrine. A IA só avisa.", porque: "Confiança sem cadastro complicado: a IA ajuda, mas quem decide é a equipe.", situacao: "parcial", pessoas: ["luan", "james"], falta: "Aprovar, recusar ou pedir ajuste, com login de moderador. Hoje a rota de moderação está aberta." },
     { id: "i3", titulo: "Verificar quem publica", pedido: "O selo é da pessoa, separado da aprovação do anúncio. Morador entra com nome e telefone. Comércio conhecido pede o selo.", porque: "O selo diz que o ISAC conhece quem publica. Aprovar um anúncio não pode dar selo a ninguém.", situacao: "parcial", pessoas: ["james", "kaio", "luan"], falta: "Selo no perfil. Aprovar um anúncio não pode marcar a pessoa como verificada. Hoje a API faz as duas coisas juntas." },
     { id: "i4", titulo: "Retorno quando recusa", pedido: "Se o anúncio for recusado ou precisar de ajuste, a pessoa vê o motivo e corrige em Meus anúncios.", porque: "Sem o motivo, a pessoa não sabe o que corrigir e desiste de anunciar.", situacao: "falta", pessoas: ["luan", "james", "suedson"], falta: "Motivo pronto e uma mensagem. O autor vê o retorno e edita ali." },
@@ -183,7 +183,7 @@ const PLANO = {
     { id: "e-mat-4", pessoa: "matheus", prazo: "2026-10-25", titulo: "Conferência visual na rodada 2", detalhe: "Celular e Figma", situacao: "pendente" },
     { id: "e-van-0", pessoa: "vanessa", prazo: "2026-10-15", titulo: "Primeiras telas no Figma, com o Matheus", detalhe: "Vitrine, detalhe (importado e verificado), publicar em 3 passos, login e os estados de carregando, vazio e erro.", situacao: "pronto" },
     { id: "e-van-1", pessoa: "vanessa", prazo: "2026-10-20", titulo: "Registro da rodada 1", detalhe: "docs/testes", situacao: "pendente" },
-    { id: "e-van-2", pessoa: "vanessa", prazo: "2026-10-22", titulo: "Termos de uso e política de privacidade", detalhe: "Versão 1.0 escrita em 15 de outubro. Falta publicar em docs/legal. A caixa de aceite e o registro no banco ainda não existem. Advogado fica para antes de abrir de verdade.", situacao: "parcial" },
+    { id: "e-van-2", pessoa: "vanessa", prazo: "2026-10-22", titulo: "Termos de uso e política de privacidade", detalhe: "Versão 1.0 pronta e publicada na aba Termos do painel. Falta preencher o e-mail e o WhatsApp do ISAC e o provedor de IA. Advogado fica para antes de abrir de verdade.", situacao: "pronto" },
     { id: "e-van-3", pessoa: "vanessa", prazo: "2026-10-25", titulo: "Registro da rodada 2", detalhe: "docs/testes", situacao: "pendente" },
     { id: "e-van-4", pessoa: "vanessa", prazo: "2026-10-26", titulo: "README, arquitetura, diagrama do WhatsApp e decisões", detalhe: "Inclui regras de moderação e segurança", situacao: "pendente" },
     { id: "e-van-5", pessoa: "vanessa", prazo: "2026-10-26", titulo: "Modelo de negócio com a conta dos R$ 2.000", detalhe: "Números de custo do Kaio e do Demetrius. Mudas só se o Ronaldo confirmar.", situacao: "pendente" },
@@ -217,6 +217,26 @@ const PLANO = {
     { bloco: "Parcerias", texto: "ISAC, administradores dos grupos de WhatsApp, comércios do bairro e Porto Digital." },
     { bloco: "Custos", texto: "Hospedagem, Supabase, API de IA por anúncio e domínio. A conta de quantos comércios cobrem o custo e ainda geram os R$ 2.000 fecha com os números do Kaio e do Demetrius até 22 de outubro." },
   ],
+  legal: {
+    versao: "1.0",
+    data: "2026-10-15",
+    arquivos: [
+      { id: "termos", nome: "Termos de uso", arquivo: "legal/termos-de-uso.md" },
+      { id: "privacidade", nome: "Política de privacidade", arquivo: "legal/politica-de-privacidade.md" },
+    ],
+    caixaAceite: "Li e aceito os Termos de Uso e a Política de Privacidade. Sou o único responsável pelo que anuncio.",
+    salvar: [
+      { campo: "accepted_terms_at", texto: "data e hora do aceite" },
+      { campo: "terms_version", texto: "versão aceita, hoje \"1.0\"" },
+    ],
+    regras: [
+      "A caixa é obrigatória no cadastro (Luan) e no Publicar (Suedson). Sem ela marcada, o botão fica desativado.",
+      "Quando a versão mudar (por exemplo, para 1.1), a pessoa aceita de novo antes de publicar.",
+      "A API compara terms_version do perfil com a versão atual e recusa a publicação se forem diferentes (James).",
+      "A lista do que é proibido (item 5 dos termos) também vira aviso de suspeito na IA (Demetrius).",
+    ],
+    faltaPreencher: ["E-mail do ISAC", "WhatsApp do ISAC", "Nome do provedor de IA (Demetrius)"],
+  },
   mudas: "Ideia de converter parte da receita em mudas plantadas, com um contador no painel. Só entra no modelo de negócio se o Ronaldo confirmar.",
 };
 

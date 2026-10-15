@@ -987,3 +987,49 @@ h2::after { width: 56px; height: 4px; background: linear-gradient(90deg, var(--a
   .sirene::after { animation: none; }
   .bloqueio-passos li:hover, .row:hover .pill { transform: none; }
 }
+
+/* ===== Aba Termos ===== */
+.legal {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px clamp(18px, 4vw, 44px);
+  max-width: 860px;
+  color: var(--body);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.legal h1 { margin: 0 0 6px; font-size: 26px; color: var(--text); }
+.legal h2 { margin: 28px 0 8px; font-size: 18px; color: var(--text); padding-top: 14px; border-top: 1px solid var(--line); }
+.legal p { margin: 10px 0; }
+.legal ul, .legal ol { margin: 8px 0; padding-left: 22px; }
+.legal li { margin: 4px 0; }
+.legal strong { color: var(--text); }
+.legal hr { border: 0; border-top: 1px solid var(--line-strong); margin: 22px 0; }
+.legal blockquote { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--st-parcial); background: rgba(253, 171, 61, 0.08); border-radius: 0 8px 8px 0; color: #ffe2b8; }
+.tabela-legal { overflow-x: auto; margin: 12px 0; }
+.legal table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.legal th, .legal td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.legal th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.legal code, .row code { font-family: var(--mono); font-size: 13px; background: #1e1e27; padding: 1px 6px; border-radius: 5px; }
+.aceite-demo { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); border: 1px dashed var(--line-strong); color: var(--text); font-size: 14.5px; }
+.aceite-demo input { margin-top: 4px; width: 16px; height: 16px; accent-color: var(--accent); }
+.card .dica { margin-top: 10px; color: var(--muted); font-size: 13px; }
+.legal h2::after { display: none; }
+.secao-head .chips button {
+  height: 30px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid var(--line-strong); color: var(--body); font-size: 13px;
+}
+.secao-head .chips button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  border-color: color-mix(in srgb, var(--c) 60%, transparent);
+  color: #fff;
+}
+
+/* Celular: impede que a lateral ou o conteúdo alarguem a página (antes ela ficava com ~980px) */
+.app > * { min-width: 0; }
+.secao-head { flex-wrap: wrap; }
+@media (max-width: 860px) {
+  .pessoa-row { grid-template-columns: 8px auto auto; white-space: nowrap; }
+  .pessoa-row .nome { overflow: visible; }
+}

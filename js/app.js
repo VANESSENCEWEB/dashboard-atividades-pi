@@ -5,7 +5,11 @@ const state = {
   status: "todos",
   slide: 0,
   deck: "tudo",
+  legal: "termos",
 };
+
+// Textos dos termos já baixados (para não buscar de novo a cada clique)
+const LEGAL_CACHE = {};
 
 const SLIDES = [
   { grupo: "Apresentação", titulo: "Capa", texto: "A economia do bairro, organizada, sustentando quem cuida dele.", src: "midia/escopo/01-capa.jpg" },
@@ -451,7 +455,7 @@ function avisos() {
     lista.push({
       nivel: "atencao",
       titulo: `${ronaldo.length} pedidos do Ronaldo ainda abertos`,
-      texto: "Termos de uso e política de privacidade estão na versão 1.0, de 15 de outubro. Seguimos parciais: falta publicar em docs/legal, a caixa de aceite e gravar data e versão.",
+      texto: "O texto dos termos e da política está pronto (aba Termos). Falta a caixa de aceite no front, gravar data e versão no banco e a API recusar quem não aceitou.",
       pessoas: [...new Set(ronaldo.flatMap((item) => item.pessoas))],
     });
   }
@@ -976,6 +980,109 @@ function renderCombinados() {
     </div>`;
 }
 
+/* ---------------------------------------------------------------
+   TERMOS — mostra os textos legais que ficam em legal/*.md
+   --------------------------------------------------------------- */
+
+// Converte o markdown simples dos termos em HTML.
+// SEGURANÇA: escapa todo o texto primeiro (esc) e só depois aplica
+// negrito e títulos, então nenhum texto do arquivo vira código na página.
+function inlineMd(texto) {
+  return esc(texto)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function markdownParaHTML(md) {
+  const linhas = md.replace(/\r/g, "").split("\n");
+  let html = "";
+  let lista = null;          // "ul" ou "ol" enquanto estiver dentro de uma lista
+  let tabela = null;         // linhas da tabela sendo montada
+  const fecharLista = () => { if (lista) { html += `</${lista}>`; lista = null; } };
+  const fecharTabela = () => {
+    if (!tabela) return;
+    const [cab, , ...corpo] = tabela;
+    const celulas = (linha) => linha.split("|").slice(1, -1).map((c) => c.trim());
+    html += `<div class="tabela-legal"><table><thead><tr>${celulas(cab).map((c) => `<th>${inlineMd(c)}</th>`).join("")}</tr></thead><tbody>${corpo.map((linha) => `<tr>${celulas(linha).map((c) => `<td>${inlineMd(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    tabela = null;
+  };
+  linhas.forEach((linha) => {
+    const t = linha.trim();
+    if (t.startsWith("|")) { fecharLista(); (tabela = tabela || []).push(t); return; }
+    fecharTabela();
+    if (!t) { fecharLista(); return; }
+    if (t === "---") { fecharLista(); html += "<hr>"; return; }
+    if (t.startsWith("# ")) { fecharLista(); html += `<h1>${inlineMd(t.slice(2))}</h1>`; return; }
+    if (t.startsWith("## ")) { fecharLista(); html += `<h2>${inlineMd(t.slice(3))}</h2>`; return; }
+    if (t.startsWith("> ")) { fecharLista(); html += `<blockquote>${inlineMd(t.slice(2))}</blockquote>`; return; }
+    const ul = t.match(/^- (.*)/);
+    const ol = t.match(/^\d+\. (.*)/);
+    if (ul || ol) {
+      const tipo = ul ? "ul" : "ol";
+      if (lista !== tipo) { fecharLista(); html += `<${tipo}>`; lista = tipo; }
+      html += `<li>${inlineMd((ul || ol)[1])}</li>`;
+      return;
+    }
+    fecharLista();
+    html += `<p>${inlineMd(t)}</p>`;
+  });
+  fecharLista();
+  fecharTabela();
+  return html;
+}
+
+// Busca o arquivo .md (uma vez só) e mostra na tela
+function carregarLegal(item) {
+  const alvo = document.getElementById("texto-legal");
+  if (!alvo) return;
+  if (LEGAL_CACHE[item.id]) { alvo.innerHTML = LEGAL_CACHE[item.id]; return; }
+  fetch(item.arquivo)
+    .then((resposta) => { if (!resposta.ok) throw new Error(resposta.status); return resposta.text(); })
+    .then((md) => {
+      LEGAL_CACHE[item.id] = markdownParaHTML(md);
+      const atual = document.getElementById("texto-legal");
+      if (atual && state.legal === item.id) atual.innerHTML = LEGAL_CACHE[item.id];
+    })
+    .catch(() => {
+      const atual = document.getElementById("texto-legal");
+      if (atual) atual.innerHTML = `<p class="vazio">Não consegui abrir ${esc(item.arquivo)}. Abra direto no repositório.</p>`;
+    });
+}
+
+function renderTermos() {
+  const legal = PLANO.legal;
+  const item = legal.arquivos.find((a) => a.id === state.legal) || legal.arquivos[0];
+  const abas = legal.arquivos
+    .map((a) => `<button type="button" data-legal="${a.id}" aria-pressed="${a.id === item.id}" style="--c:#8b7cff">${esc(a.nome)}</button>`)
+    .join("");
+  const ronaldo = PLANO.instrutor.find((i) => i.id === "i1");
+  $("#conteudo").innerHTML = `
+    <div class="stack">
+      <section class="secao">
+        ${tituloSecao("escudo", "Para a equipe de desenvolvimento")}
+        <div class="grid-2">
+          <article class="card">
+            <h3>Caixa de aceite</h3>
+            <label class="aceite-demo"><input type="checkbox" disabled> <span>${esc(legal.caixaAceite)}</span></label>
+            <p class="dica">“Termos de Uso” e “Política de Privacidade” viram links para as páginas /termos e /privacidade.</p>
+          </article>
+          <article class="card">
+            <h3>O que salvar no perfil</h3>
+            <div class="lista sem-tempo">${legal.salvar.map((s) => linha({ titulo: s.campo, detalhe: s.texto })).join("")}</div>
+          </article>
+        </div>
+        <div class="lista sem-tempo" style="margin-top:12px">${legal.regras.map((r) => linha({ titulo: r })).join("")}</div>
+        ${ronaldo ? `<div class="lista sem-tempo" style="margin-top:12px">${blocoDesafio({ ...ronaldo, situacao: ronaldo.situacao }) || ""}</div>` : ""}
+        <p class="nota">Falta preencher nos textos: ${esc(legal.faltaPreencher.join(", "))}. Estão marcados entre colchetes.</p>
+      </section>
+      <section class="secao">
+        <div class="secao-head">${tituloSecao("pasta", "Textos completos")}<div class="chips">${abas}</div></div>
+        <article class="legal" id="texto-legal"><p class="vazio">Carregando…</p></article>
+      </section>
+    </div>`;
+  carregarLegal(item);
+}
+
 const views = {
   hoje: renderHoje,
   frentes: renderFrentes,
@@ -984,6 +1091,7 @@ const views = {
   escopo: renderEscopo,
   desafio: renderDesafio,
   combinados: renderCombinados,
+  termos: renderTermos,
 };
 
 function metaDaView() {
@@ -996,6 +1104,7 @@ function metaDaView() {
     escopo: ["Escopo", "Apresentação de hoje e telas do Figma", "A apresentação foi feita em 15 de outubro. As telas são as que já estão prontas no Figma."],
     desafio: ["Desafio", "O que a banca espera ver", "Nove entregas do PDF de 16 de setembro. O Business Model Canvas é o diferencial oficial."],
     combinados: ["Combinados", "Contrato, testes e onde mora cada parte", "Quem mudar o formato avisa no grupo antes."],
+    termos: ["Termos", "Termos de uso e política de privacidade", `Versão ${PLANO.legal.versao}, de 15 de outubro. Pedido do Ronaldo: quem anuncia responde pelo conteúdo, não o ISAC. Rascunho do MVP: antes de abrir de verdade, o ISAC pede a revisão de um advogado.`],
   };
   return mapa[state.view] || mapa.hoje;
 }
@@ -1051,6 +1160,11 @@ document.body.addEventListener("click", (event) => {
   if (dir) {
     const total = slidesVisiveis().length;
     state.slide = (state.slide + Number(dir.dataset.slideDir) + total) % total;
+    render();
+  }
+  const legalBtn = event.target.closest("[data-legal]");
+  if (legalBtn) {
+    state.legal = legalBtn.dataset.legal;
     render();
   }
   const slide = event.target.closest("[data-slide]");
